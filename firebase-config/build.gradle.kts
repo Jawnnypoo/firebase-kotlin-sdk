@@ -10,7 +10,7 @@ import utils.toTargetPlatforms
  * Copyright (c) 2020 GitLive Ltd.  Use of this source code is governed by the Apache 2.0 license.
  */
 
-version = project.property("firebase-config.version") as String
+version = (findProperty("VERSION_NAME") ?: project.property("firebase-config.version")) as String
 val supportedPlatforms = (project.property("firebase-config.supportedTargets") as String).toTargetPlatforms()
 
 plugins {
@@ -203,33 +203,32 @@ mavenPublishing {
     signAllPublications()
 
     coordinates(
-        groupId = "dev.gitlive",
+        groupId = "com.jawnnypoo",
         artifactId = "firebase-config",
-        version = project.property("firebase-config.version") as String
     )
 
     pom {
         name.set("firebase-kotlin-sdk")
         description.set("The Firebase Kotlin SDK is a Kotlin-first SDK for Firebase. It's API is similar to the Firebase Android SDK Kotlin Extensions but also supports multiplatform projects, enabling you to use Firebase directly from your common source targeting iOS, Android or JS.")
-        url.set("https://github.com/GitLiveApp/firebase-kotlin-sdk")
+        url.set("https://github.com/Jawnnypoo/firebase-kotlin-sdk")
         inceptionYear.set("2019")
 
         scm {
-            url.set("https://github.com/GitLiveApp/firebase-kotlin-sdk")
-            connection.set("scm:git:https://github.com/GitLiveApp/firebase-kotlin-sdk.git")
-            developerConnection.set("scm:git:https://github.com/GitLiveApp/firebase-kotlin-sdk.git")
+            url.set("https://github.com/Jawnnypoo/firebase-kotlin-sdk")
+            connection.set("scm:git:https://github.com/Jawnnypoo/firebase-kotlin-sdk.git")
+            developerConnection.set("scm:git:https://github.com/Jawnnypoo/firebase-kotlin-sdk.git")
             tag.set("HEAD")
         }
 
         issueManagement {
             system.set("GitHub Issues")
-            url.set("https://github.com/GitLiveApp/firebase-kotlin-sdk/issues")
+            url.set("https://github.com/Jawnnypoo/firebase-kotlin-sdk/issues")
         }
 
         developers {
             developer {
-                name.set("Nicholas Bransby-Williams")
-                email.set("nbransby@gmail.com")
+                name.set("John Carlson")
+                email.set("jawnnypoo@gmail.com")
             }
         }
 

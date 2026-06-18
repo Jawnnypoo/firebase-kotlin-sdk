@@ -1,90 +1,52 @@
-# This workflow will build a Java project with Gradle
-# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-gradle
+# Publishes all modules to Maven Central (Sonatype Central Portal) under the `com.jawnnypoo`
+# namespace whenever a tag is pushed. The pushed tag name becomes the published version
+# (e.g. tag `0.0.1-wasm` -> com.jawnnypoo:firebase-firestore:0.0.1-wasm).
+#
+# Required repository (or org) secrets — reused from the PhysicsBox setup:
+#   MAVEN_CENTRAL_USERNAME  - Central Portal user token username
+#   MAVEN_CENTRAL_PASSWORD  - Central Portal user token password
+#   SIGNING_PRIVATE_KEY     - ASCII-armored GPG private key (in-memory signing)
+#   SIGNING_PASSWORD        - passphrase for the GPG key
+#
+# Runs on macOS because the Apple targets bind the native Firebase iOS SDK via CocoaPods.
 
 name: Publish
 
 on:
-  release:
-    types: [ prereleased, released ]
+  push:
+    tags:
+      - '*'
   workflow_dispatch:
 
 env:
-  ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.SONATYPEUSERNAME }}
-  ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.SONATYPEPASSWORD }}
-  ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_PRIVATE_KEY }}
-  ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.PASSPHRASE }}
+  ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+  ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+  ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_PRIVATE_KEY }}
+  ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
 
 jobs:
-  build:
+  publish:
     runs-on: macos-latest
+    if: github.repository == 'Jawnnypoo/firebase-kotlin-sdk'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
       - name: Set up JDK
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
-      - uses: gradle/actions/setup-gradle@v5
-      - name: Setup versions
-        run: ./gradlew :updateVersions
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+          cache: gradle
       - uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: '16.4'
-      - name: Publish Firebase Analytics
-        run: ./gradlew :firebase-analytics:publish
-      - name: Publish Firebase App
-        run: ./gradlew :firebase-app:publish
-      - name: Publish Firebase Auth
-        run: ./gradlew :firebase-auth:publish
-      - name: Publish Firebase Common
-        run: ./gradlew :firebase-common:publish
-      - name: Publish Firebase Common Internal
-        run: ./gradlew :firebase-common-internal:publish
-      - name: Publish Firebase Config
-        run: ./gradlew :firebase-config:publish
-      - name: Publish Firebase Database
-        run: ./gradlew :firebase-database:publish
-      - name: Publish Firebase Firestore
-        run: ./gradlew :firebase-firestore:publish
-      - name: Publish Firebase Functions
-        run: ./gradlew :firebase-functions:publish
-      - name: Publish Firebase Messaging
-        run: ./gradlew :firebase-messaging:publish
-      - name: Publish Firebase Storage
-        run: ./gradlew :firebase-storage:publish
-      - name: Publish Firebase Installations
-        run: ./gradlew :firebase-installations:publish
-      - name: Publish Firebase Performance
-        run: ./gradlew :firebase-perf:publish
-      - name: Publish Firebase Crashlytics
-        run: ./gradlew :firebase-crashlytics:publish
-  documentation:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Set up JDK
-        uses: actions/setup-java@v5
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-      - uses: gradle/gradle-build-action@v3
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
-      - uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: '16.4'
-      - name: Generate documentation
-        run: ./gradlew dokkaHtmlMultiModule
-      - name: Uploading build folder
-        uses: actions/upload-artifact@v5
-        with:
-          name: artefact
-          path: build/dokka/htmlMultiModule
-      - name: Deploy API documentation to Github Pages
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          branch: gh-pages
-          folder: build/dokka/htmlMultiModule
-          target-folder: docs
+      # Single aggregated deployment: builds every target (android, jvm, js, wasmJs, ios,
+      # macos, tvos) for all modules and uploads them to one Central Portal deployment,
+      # which `automaticRelease = true` then releases automatically. The version is the tag.
+      - name: Publish to Maven Central
+        run: >
+          ./gradlew publishAndReleaseToMavenCentral
+          -PVERSION_NAME="${GITHUB_REF_NAME}"
+          --no-configuration-cache
+          --stacktrace

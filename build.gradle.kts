@@ -54,7 +54,7 @@ tasks {
 }
 
 private val dokkaCopyrightMessage = "© 2024 GitLive Ltd."
-private val dokkaHomepageUrl = "https://github.com/GitLiveApp/firebase-kotlin-sdk"
+private val dokkaHomepageUrl = "https://github.com/Jawnnypoo/firebase-kotlin-sdk"
 
 tasks.withType<AbstractDokkaTask>().configureEach {
     val version = project.property("firebase-app.version") as String
@@ -71,7 +71,7 @@ tasks.withType<AbstractDokkaTask>().configureEach {
 
 subprojects {
 
-    group = "dev.gitlive"
+    group = "com.jawnnypoo"
 
     val nonDocumentationList = listOf("test-utils", "firebase-common", "firebase-common-internal")
     val skipDocumentation = nonDocumentationList.contains(project.name)
